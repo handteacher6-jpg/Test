@@ -10,7 +10,7 @@
       margin: 0;
       overflow: hidden;
       color: #fff;
-      background: #dce7e8;
+      background: #aab8b8;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     canvas { display: block; }
@@ -69,25 +69,27 @@
     <p>A little home, inside and out</p>
   </div>
   <button id="reset" type="button">Reset view</button>
-  <div id="hint">Drag to look around &nbsp;·&nbsp; Scroll to zoom</div>
+  <div id="hint">WASD / arrow keys: move &nbsp;·&nbsp; Drag: look around &nbsp;·&nbsp; Scroll: zoom</div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xc9dcdf);
-    scene.fog = new THREE.Fog(0xc9dcdf, 24, 55);
+    scene.background = new THREE.Color(0xaab8b8);
+    scene.fog = new THREE.Fog(0xaab8b8, 30, 65);
 
-    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.78;
     document.body.appendChild(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xeaf5ff, 0x87927c, 1.7));
-    const sunlight = new THREE.DirectionalLight(0xffe2b8, 2.3);
+    scene.add(new THREE.HemisphereLight(0xeaf5ff, 0x73705d, 0.85));
+    const sunlight = new THREE.DirectionalLight(0xffe2b8, 1.25);
     sunlight.position.set(-8, 15, 10);
     sunlight.castShadow = true;
     sunlight.shadow.mapSize.set(2048, 2048);
@@ -99,7 +101,7 @@
 
     const mat = (color, roughness = 0.82) => new THREE.MeshStandardMaterial({ color, roughness });
     const materials = {
-      grass: mat(0x899b74),
+      grass: mat(0x687653),
       path: mat(0xc7b99f),
       wall: mat(0xf0e9dc),
       side: mat(0xd8d0c2),
@@ -147,22 +149,31 @@
     const house = new THREE.Group();
     scene.add(house);
 
-    // The open front and right side make the furnished room easy to explore.
+    // Solid walls enclose the room; the front doorway and roof slats keep it explorable.
     box(house, 8.2, 0.24, 6.7, materials.floor, 0, 0, 0);
-    box(house, 8.2, 4.7, 0.24, materials.wall, 0, 2.35, -3.35);
+    [-3.6125, -0.3, 3.3125].forEach((x, index) => {
+      const widths = [0.975, 2.55, 1.575];
+      box(house, widths[index], 4.7, 0.24, materials.wall, x, 2.35, -3.35);
+    });
+    [-2.425, 2.425].forEach((x) => box(house, 3.35, 4.7, 0.24, materials.wall, x, 2.35, 3.35));
     box(house, 0.24, 4.7, 6.7, materials.side, -4.1, 2.35, 0);
+    box(house, 0.24, 4.7, 6.7, materials.side, 4.1, 2.35, 0);
+    box(house, 1.5, 0.8, 0.24, materials.wall, 0, 4.3, 3.35);
     box(house, 8.7, 0.22, 0.32, materials.darkWood, 0, 4.83, -3.35);
     box(house, 0.28, 0.22, 6.8, materials.darkWood, -4.1, 4.83, 0);
+    box(house, 0.28, 0.22, 6.8, materials.darkWood, 4.1, 4.83, 0);
 
-    // Open pergola roof: shade without hiding the room from above.
+    // Open pergola roof shades the interior while leaving it visible from above.
     for (let z = -2.7; z <= 2.2; z += 1.15) {
       box(house, 8.55, 0.14, 0.24, materials.wood, 0, 5.03, z);
     }
     box(house, 8.7, 0.18, 0.22, materials.darkWood, 0, 5.03, 2.8);
 
-    // Back-wall picture windows with slim timber frames and crossbars.
+    // Picture windows with slim timber frames and crossbars.
     [-2.35, 1.75].forEach((x) => {
-      box(house, 1.55, 1.45, 0.035, materials.glass, x, 3.05, -3.205, false);
+      box(house, 1.55, 2.325, 0.24, materials.wall, x, 1.1625, -3.35);
+      box(house, 1.55, 0.925, 0.24, materials.wall, x, 4.2375, -3.35);
+      box(house, 1.55, 1.45, 0.035, materials.glass, x, 3.05, -3.35, false);
       [-0.81, 0.81].forEach((offset) => {
         box(house, 0.07, 1.62, 0.09, materials.wood, x + offset, 3.05, -3.14);
       });
@@ -232,6 +243,37 @@
       house.add(leaf);
     });
 
+    // A small character can walk through the front doorway and around the furniture.
+    const character = new THREE.Group();
+    character.position.set(0, 0.12, 4.35);
+    house.add(character);
+    const skin = mat(0xb97854);
+    const shirt = mat(0x456d70);
+    const pants = mat(0x344452);
+    const characterDark = mat(0x292c31);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 20, 16), skin);
+    head.position.y = 1.48;
+    head.castShadow = true;
+    character.add(head);
+    box(character, 0.46, 0.58, 0.27, shirt, 0, 1.02, 0);
+    box(character, 0.16, 0.13, 0.28, characterDark, 0, 0.65, -0.015);
+    const leftArm = new THREE.Group();
+    const rightArm = new THREE.Group();
+    leftArm.position.set(-0.3, 1.2, 0);
+    rightArm.position.set(0.3, 1.2, 0);
+    character.add(leftArm, rightArm);
+    box(leftArm, 0.13, 0.48, 0.14, shirt, 0, -0.22, 0);
+    box(rightArm, 0.13, 0.48, 0.14, shirt, 0, -0.22, 0);
+    const leftLeg = new THREE.Group();
+    const rightLeg = new THREE.Group();
+    leftLeg.position.set(-0.12, 0.68, 0);
+    rightLeg.position.set(0.12, 0.68, 0);
+    character.add(leftLeg, rightLeg);
+    box(leftLeg, 0.17, 0.48, 0.18, pants, 0, -0.22, 0);
+    box(rightLeg, 0.17, 0.48, 0.18, pants, 0, -0.22, 0);
+    box(leftLeg, 0.2, 0.1, 0.32, characterDark, 0, -0.46, -0.035);
+    box(rightLeg, 0.2, 0.1, 0.32, characterDark, 0, -0.46, -0.035);
+
     // A stepping-stone path leads up to the open front of the house.
     for (let i = 0; i < 6; i++) {
       const stone = box(scene, 1.65, 0.12, 0.72, materials.path, 0, -0.035, 4.1 + i * 0.95, false);
@@ -281,12 +323,28 @@
     addBush(5.3, -5.0, 0.8);
 
     const target = new THREE.Vector3(0, 2.05, 0);
-    const initial = { theta: Math.PI / 4, phi: 1.04, radius: 21 };
+    const initial = {
+      theta: 0.25,
+      phi: 1.04,
+      radius: 14.5,
+      characterX: 0,
+      characterZ: 4.35
+    };
     let theta = initial.theta;
     let phi = initial.phi;
     let radius = initial.radius;
+    let exploring = false;
     let dragging = false;
     let previousPointer = { x: 0, y: 0 };
+    const targetDestination = new THREE.Vector3();
+    const pressedKeys = new Set();
+    const clock = new THREE.Clock();
+    const obstacles = [
+      { x: -1.05, z: 1.45, halfX: 1.7, halfZ: 0.62 },
+      { x: 0.5, z: 0.15, halfX: 1.15, halfZ: 0.67 },
+      { x: 2.65, z: -2.5, halfX: 1.35, halfZ: 0.55 },
+      { x: 2.05, z: -0.75, halfX: 0.78, halfZ: 0.78 }
+    ];
 
     function updateCamera() {
       camera.position.set(
@@ -297,6 +355,60 @@
       camera.lookAt(target);
     }
     updateCamera();
+
+    window.addEventListener('keydown', (event) => {
+      const key = event.key.toLowerCase();
+      if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+        event.preventDefault();
+        pressedKeys.add(key);
+        exploring = true;
+        radius = Math.min(radius, 8.5);
+      }
+    });
+    window.addEventListener('keyup', (event) => pressedKeys.delete(event.key.toLowerCase()));
+    window.addEventListener('blur', () => pressedKeys.clear());
+
+    function canMoveTo(x, z) {
+      if (x < -3.72 || x > 3.72 || z < -3.02 || z > 8.5) return false;
+      if (z > 3.02 && z < 3.72 && Math.abs(x) > 0.42) return false;
+      return !obstacles.some((obstacle) =>
+        Math.abs(x - obstacle.x) < obstacle.halfX &&
+        Math.abs(z - obstacle.z) < obstacle.halfZ
+      );
+    }
+
+    function moveCharacter(delta) {
+      const forward = Number(pressedKeys.has('w') || pressedKeys.has('arrowup')) -
+        Number(pressedKeys.has('s') || pressedKeys.has('arrowdown'));
+      const sideways = Number(pressedKeys.has('d') || pressedKeys.has('arrowright')) -
+        Number(pressedKeys.has('a') || pressedKeys.has('arrowleft'));
+      const length = Math.hypot(forward, sideways);
+      if (!length) {
+        leftLeg.rotation.x = THREE.MathUtils.damp(leftLeg.rotation.x, 0, 12, delta);
+        rightLeg.rotation.x = THREE.MathUtils.damp(rightLeg.rotation.x, 0, 12, delta);
+        leftArm.rotation.x = THREE.MathUtils.damp(leftArm.rotation.x, 0, 12, delta);
+        rightArm.rotation.x = THREE.MathUtils.damp(rightArm.rotation.x, 0, 12, delta);
+        return;
+      }
+
+      const forwardX = -Math.sin(theta);
+      const forwardZ = -Math.cos(theta);
+      const rightX = Math.cos(theta);
+      const rightZ = -Math.sin(theta);
+      const moveX = (forward * forwardX + sideways * rightX) / length;
+      const moveZ = (forward * forwardZ + sideways * rightZ) / length;
+      const speed = 2.6 * delta;
+      const nextX = character.position.x + moveX * speed;
+      const nextZ = character.position.z + moveZ * speed;
+      if (canMoveTo(nextX, character.position.z)) character.position.x = nextX;
+      if (canMoveTo(character.position.x, nextZ)) character.position.z = nextZ;
+      character.rotation.y = Math.atan2(-moveX, -moveZ);
+      const stride = Math.sin(clock.elapsedTime * 10) * 0.42;
+      leftLeg.rotation.x = stride;
+      rightLeg.rotation.x = -stride;
+      leftArm.rotation.x = -stride * 0.65;
+      rightArm.rotation.x = stride * 0.65;
+    }
 
     renderer.domElement.addEventListener('pointerdown', (event) => {
       dragging = true;
@@ -314,7 +426,7 @@
     renderer.domElement.addEventListener('pointercancel', () => { dragging = false; });
     renderer.domElement.addEventListener('wheel', (event) => {
       event.preventDefault();
-      radius = THREE.MathUtils.clamp(radius + event.deltaY * 0.012, 10, 34);
+      radius = THREE.MathUtils.clamp(radius + event.deltaY * 0.012, 5, 28);
       updateCamera();
     }, { passive: false });
 
@@ -322,6 +434,10 @@
       theta = initial.theta;
       phi = initial.phi;
       radius = initial.radius;
+      character.position.set(initial.characterX, 0.12, initial.characterZ);
+      character.rotation.y = 0;
+      exploring = false;
+      pressedKeys.clear();
       updateCamera();
     });
 
@@ -334,6 +450,15 @@
 
     function animate() {
       requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.05);
+      moveCharacter(delta);
+      if (exploring) {
+        targetDestination.set(character.position.x, 1.35, character.position.z);
+      } else {
+        targetDestination.set(0, 2.05, 0);
+      }
+      target.lerp(targetDestination, 1 - Math.exp(-delta * 5));
+      updateCamera();
       renderer.render(scene, camera);
     }
     animate();
