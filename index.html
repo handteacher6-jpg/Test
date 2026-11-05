@@ -198,6 +198,8 @@
     box(house, 0.24, 4.7, 6.7, materials.side, -4.1, 2.35, 0);
     box(house, 0.24, 4.7, 6.7, materials.side, 4.1, 2.35, 0);
     box(house, 1.5, 0.8, 0.24, materials.wall, 0, 4.3, 3.35);
+    [-0.75, 0.75].forEach((x) => box(house, 0.14, 3.78, 0.3, materials.wood, x, 2.01, 3.35));
+    box(house, 1.64, 0.14, 0.3, materials.wood, 0, 3.83, 3.35);
     box(house, 8.7, 0.22, 0.32, materials.darkWood, 0, 4.83, -3.35);
     box(house, 0.28, 0.22, 6.8, materials.darkWood, -4.1, 4.83, 0);
     box(house, 0.28, 0.22, 6.8, materials.darkWood, 4.1, 4.83, 0);
@@ -227,12 +229,12 @@
     box(house, 1.95, 3.2, 0.14, materials.wall, 3.05, 1.6, 0.15);
     box(house, 0.5, 3.2, 0.14, materials.wall, 2.3, 1.6, 0.15);
     box(house, 0.45, 3.2, 0.14, materials.wall, 3.8, 1.6, 0.15);
-    box(house, 0.14, 2.25, 1.0, materials.glass, 3.52, 1.18, 2.55, false);
-    box(house, 0.14, 2.25, 1.0, materials.glass, 2.54, 1.18, 2.55, false);
-    box(house, 1.12, 0.12, 1.0, materials.fabric, 3.03, 0.12, 2.55, false);
+    box(house, 0.14, 2.25, 1.0, materials.glass, 3.52, 1.365, 2.55, false);
+    box(house, 0.14, 2.25, 1.0, materials.glass, 2.54, 1.365, 2.55, false);
+    box(house, 1.12, 0.12, 1.0, materials.fabric, 3.03, 0.18, 2.55, false);
     box(house, 0.72, 0.45, 0.48, materials.fabric, 2.55, 0.38, 0.9);
     box(house, 0.82, 0.1, 0.52, materials.wood, 2.55, 0.66, 0.9);
-    cylinder(house, 0.27, 0.31, 0.48, materials.fabric, 3.45, 0.28, 1.1);
+    cylinder(house, 0.27, 0.31, 0.48, materials.fabric, 3.45, 0.36, 1.1);
     box(house, 0.48, 0.42, 0.55, materials.fabric, 3.45, 0.43, 1.48);
     cylinder(house, 0.16, 0.16, 0.1, materials.fabric, 3.45, 0.7, 1.42);
 
@@ -290,7 +292,7 @@
 
     box(house, 2.05, 0.18, 1.08, materials.wood, 0.5, 0.62, 0.15);
     [0.5, 1.95].forEach((x) => {
-      [-0.2, 0.5].forEach((z) => cylinder(house, 0.045, 0.045, 0.55, materials.darkWood, x, 0.34, z));
+      [-0.2, 0.5].forEach((z) => cylinder(house, 0.045, 0.045, 0.55, materials.darkWood, x, 0.395, z));
     });
     box(house, 1.55, 0.12, 0.12, materials.fabric, 0.5, 0.78, 0.15);
 
@@ -319,7 +321,7 @@
       box(house, 0.54, 0.12, 0.55, materials.sofa, x, 0.55, z);
       box(house, 0.54, 0.58, 0.12, materials.sofa, x, 0.85, z - 0.22);
       [x - 0.18, x + 0.18].forEach((legX) => {
-        cylinder(house, 0.025, 0.025, 0.48, materials.darkWood, legX, 0.29, z);
+        cylinder(house, 0.025, 0.025, 0.48, materials.darkWood, legX, 0.36, z);
       });
     });
 
