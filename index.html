@@ -6,6 +6,7 @@
   <title>Modern Mega House</title>
   <style>
     * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; }
     body {
       margin: 0;
       overflow: hidden;
@@ -13,7 +14,7 @@
       background: #aab8b8;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    canvas { display: block; }
+    canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
     #info {
       position: absolute;
       top: 24px;
@@ -22,6 +23,7 @@
       border: 1px solid rgba(255,255,255,.2);
       border-left: 4px solid #e8a761;
       border-radius: 12px;
+      max-width: calc(100vw - 48px);
       background: rgba(25, 36, 39, .82);
       box-shadow: 0 12px 35px rgba(18, 30, 34, .18);
       backdrop-filter: blur(12px);
@@ -101,7 +103,7 @@
 <body>
   <div id="info">
     <h1>Modern Mega House</h1>
-    <p>First-person tour · Living room · Kitchen · Bedroom · Bathroom</p>
+    <p>First-person tour · Living room · Kitchen · Dining · Guest suite · Study · Family room · Bathroom</p>
   </div>
   <button id="reset" type="button">Reset view</button>
   <div id="hint">WASD / arrows or joystick: move &nbsp;·&nbsp; Drag: look around</div>
@@ -186,32 +188,67 @@
     scene.add(ground);
 
     const house = new THREE.Group();
-    house.scale.set(1.72, 1.72, 1.72);
+    house.scale.setScalar(2);
     scene.add(house);
 
     const houseShell = new THREE.Group();
-    houseShell.scale.set(1.8, 1.2, 1.8);
-    scene.add(houseShell);
+    house.add(houseShell);
 
     const extraRoom = new THREE.Group();
     extraRoom.position.set(5.5, 0, -3.75);
     house.add(extraRoom);
 
     // Solid walls enclose the room; the front doorway and roof slats keep it explorable.
-    box(houseShell, 8.2, 0.24, 6.7, materials.floor, 0, 0, 0);
-    [-3.6125, -0.3, 3.3125].forEach((x, index) => {
-      const widths = [0.975, 2.55, 1.575];
-      box(houseShell, widths[index], 4.7, 0.24, materials.wall, x, 2.35, -3.35);
+    box(houseShell, 14.8, 0.24, 12.8, materials.floor, 0, 0, 0);
+    [-6.35, 0, 6.35].forEach((x, index) => {
+      const widths = [2.1, 6.2, 2.1];
+      box(houseShell, widths[index], 4.7, 0.24, materials.wall, x, 2.35, -6.4);
     });
-    [-2.425, 2.425].forEach((x) => box(houseShell, 3.35, 4.7, 0.24, materials.wall, x, 2.35, 3.35));
-    box(houseShell, 0.24, 4.7, 6.7, materials.side, -4.1, 2.35, 0);
-    box(houseShell, 0.24, 4.7, 6.7, materials.side, 4.1, 2.35, 0);
-    box(houseShell, 1.5, 0.8, 0.24, materials.wall, 0, 4.3, 3.35);
-    [-0.75, 0.75].forEach((x) => box(houseShell, 0.14, 3.78, 0.3, materials.wood, x, 2.01, 3.35));
-    box(houseShell, 1.64, 0.14, 0.3, materials.wood, 0, 3.83, 3.35);
-    box(houseShell, 8.7, 0.22, 0.32, materials.darkWood, 0, 4.83, -3.35);
-    box(houseShell, 0.28, 0.22, 6.8, materials.darkWood, -4.1, 4.83, 0);
-    box(houseShell, 0.28, 0.22, 6.8, materials.darkWood, 4.1, 4.83, 0);
+    [-4.3, 4.3].forEach((x) => box(houseShell, 6.2, 4.7, 0.24, materials.wall, x, 2.35, 6.4));
+    box(houseShell, 2.4, 0.8, 0.24, materials.wall, 0, 4.3, 6.4);
+    [-1.2, 1.2].forEach((x) => box(houseShell, 0.14, 3.78, 0.3, materials.wood, x, 2.01, 6.4));
+    box(houseShell, 2.54, 0.14, 0.3, materials.wood, 0, 3.83, 6.4);
+    box(houseShell, 0.24, 4.7, 12.8, materials.side, -7.4, 2.35, 0);
+    box(houseShell, 0.24, 4.7, 12.8, materials.side, 7.4, 2.35, 0);
+    box(houseShell, 15, 0.22, 0.32, materials.darkWood, 0, 4.83, -6.4);
+    box(houseShell, 15, 0.22, 0.32, materials.darkWood, 0, 4.83, 6.4);
+    box(houseShell, 0.28, 0.22, 13, materials.darkWood, -7.4, 4.83, 0);
+    box(houseShell, 0.28, 0.22, 13, materials.darkWood, 7.4, 4.83, 0);
+
+    // Connected wings create a guest suite, study, and family room.
+    box(house, 2.8, 0.045, 4.4, materials.rug, -5.7, 0.145, -3.55, false);
+    box(house, 0.14, 2.55, 1.15, materials.wall, -4.25, 1.275, -5.62);
+    box(house, 0.14, 2.55, 1.25, materials.wall, -4.25, 1.275, -1.47);
+    box(house, 2.95, 2.55, 0.14, materials.wall, -5.7, 1.275, -5.75);
+    box(house, 2.95, 2.55, 0.14, materials.wall, -5.7, 1.275, -1.35);
+    box(house, 1.55, 0.26, 2.25, materials.darkWood, -5.8, 0.34, -4.25);
+    box(house, 1.48, 0.32, 2.12, materials.fabric, -5.8, 0.62, -4.25);
+    box(house, 1.48, 0.12, 0.62, materials.cushion, -5.8, 0.83, -4.88);
+    [-6.12, -5.48].forEach((x) => box(house, 0.52, 0.16, 0.38, materials.fabric, x, 0.88, -4.98));
+    box(house, 0.95, 0.76, 0.58, materials.wood, -5.75, 0.52, -2.25);
+    box(house, 1.05, 0.1, 0.65, materials.darkWood, -5.75, 0.95, -2.25);
+    box(house, 0.42, 1.65, 1.15, materials.side, -6.85, 0.9, -3.45);
+    box(house, 2.8, 0.045, 4.35, materials.path, -5.7, 0.145, 3.55, false);
+    box(house, 2.95, 2.55, 0.14, materials.wall, -5.7, 1.275, 1.3);
+    box(house, 0.14, 2.55, 1.2, materials.wall, -4.25, 1.275, 2.0);
+    box(house, 0.14, 2.55, 1.1, materials.wall, -4.25, 1.275, 5.65);
+    box(house, 1.65, 0.14, 0.82, materials.wood, -5.8, 0.92, 3.6);
+    box(house, 1.42, 0.82, 0.58, materials.side, -5.8, 0.48, 3.6);
+    box(house, 0.14, 1.65, 1.9, materials.darkWood, -6.85, 0.9, 4.85);
+    [0, 1, 2, 3].forEach((index) => {
+      box(house, 0.12, 0.22, 0.24, [materials.flower, materials.leaf, materials.cushion, materials.sofa][index],
+        -6.75 + index * 0.18, 1.15, 4.85);
+    });
+    box(house, 2.8, 0.045, 4.4, materials.rug, 5.65, 0.145, -3.55, false);
+    box(house, 0.14, 2.55, 1.3, materials.wall, 4.2, 1.275, -5.7);
+    box(house, 0.14, 2.55, 1.2, materials.wall, 4.2, 1.275, -1.4);
+    box(house, 2.95, 2.55, 0.14, materials.wall, 5.65, 1.275, -5.75);
+    box(house, 0.14, 2.55, 4.35, materials.wall, 7.1, 1.275, -3.55);
+    box(house, 1.65, 0.78, 0.82, materials.sofa, 5.7, 0.54, -3.4);
+    box(house, 1.65, 0.92, 0.2, materials.sofa, 5.7, 1.05, -3.0);
+    box(house, 1.05, 0.12, 0.62, materials.wood, 5.65, 0.58, -4.55);
+    box(house, 0.62, 0.72, 0.62, materials.darkWood, 6.55, 0.5, -2.0);
+    box(house, 0.7, 0.08, 0.68, materials.wood, 6.55, 0.9, -2.0);
 
     // Bedroom partition with an open doorway.
     box(house, 0.14, 2.55, 2.05, materials.wall, -1.35, 1.275, -2.125);
@@ -268,25 +305,25 @@
     });
 
     // Open pergola roof shades the interior while leaving it visible from above.
-    for (let z = -2.7; z <= 2.2; z += 1.15) {
-      box(houseShell, 8.55, 0.14, 0.24, materials.wood, 0, 5.03, z);
+    for (let z = -5.7; z <= 5.7; z += 1.15) {
+      box(houseShell, 15, 0.14, 0.24, materials.wood, 0, 5.03, z);
     }
-    box(houseShell, 8.7, 0.18, 0.22, materials.darkWood, 0, 5.03, 2.8);
+    box(houseShell, 15, 0.18, 0.22, materials.darkWood, 0, 5.03, 6.15);
 
     // Picture windows with slim timber frames and crossbars.
-    [-2.35, 1.75].forEach((x) => {
-      box(houseShell, 1.55, 2.325, 0.24, materials.wall, x, 1.1625, -3.35);
-      box(houseShell, 1.55, 0.925, 0.24, materials.wall, x, 4.2375, -3.35);
-      box(houseShell, 1.55, 1.45, 0.035, materials.glass, x, 3.05, -3.35, false);
-      [-0.81, 0.81].forEach((offset) => {
-        box(houseShell, 0.07, 1.62, 0.09, materials.wood, x + offset, 3.05, -3.14);
+    [-4.2, 4.2].forEach((x) => {
+      box(houseShell, 2.2, 2.325, 0.24, materials.wall, x, 1.1625, -6.4);
+      box(houseShell, 2.2, 0.925, 0.24, materials.wall, x, 4.2375, -6.4);
+      box(houseShell, 2.2, 1.45, 0.035, materials.glass, x, 3.05, -6.4, false);
+      [-1.1, 1.1].forEach((offset) => {
+        box(houseShell, 0.07, 1.62, 0.09, materials.wood, x + offset, 3.05, -6.19);
       });
       [-0.77, 0.77].forEach((offset) => {
-        box(houseShell, 1.68, 0.07, 0.09, materials.wood, x, 3.05 + offset, -3.14);
+        box(houseShell, 2.32, 0.07, 0.09, materials.wood, x, 3.05 + offset, -6.19);
       });
-      box(houseShell, 0.055, 1.45, 0.08, materials.wood, x, 3.05, -3.11);
-      box(houseShell, 1.55, 0.055, 0.08, materials.wood, x, 3.05, -3.11);
-      box(houseShell, 1.8, 0.12, 0.28, materials.fabric, x, 2.19, -3.08);
+      box(houseShell, 0.055, 1.45, 0.08, materials.wood, x, 3.05, -6.16);
+      box(houseShell, 2.2, 0.055, 0.08, materials.wood, x, 3.05, -6.16);
+      box(houseShell, 2.45, 0.12, 0.28, materials.fabric, x, 2.19, -6.13);
     });
 
     // Living area: a soft rug, sofa, cushions, coffee table, and a leafy plant.
@@ -399,7 +436,7 @@
 
     // A stepping-stone path leads up to the open front of the house.
     const landscape = new THREE.Group();
-    landscape.scale.setScalar(1);
+    landscape.scale.setScalar(2.8);
     scene.add(landscape);
     for (let i = 0; i < 6; i++) {
       const stone = box(landscape, 1.65, 0.12, 0.72, materials.path, 0, -0.035, 4.1 + i * 0.95, false);
@@ -490,6 +527,17 @@
     const pressedKeys = new Set();
     const clock = new THREE.Clock();
     const obstacles = [
+      { x: -4.25, z: -5.62, halfX: 0.18, halfZ: 0.65 },
+      { x: -4.25, z: -1.47, halfX: 0.18, halfZ: 0.7 },
+      { x: -5.7, z: -5.75, halfX: 1.5, halfZ: 0.18 },
+      { x: -5.7, z: -1.35, halfX: 1.5, halfZ: 0.18 },
+      { x: -5.7, z: 1.3, halfX: 1.5, halfZ: 0.18 },
+      { x: -4.25, z: 2.0, halfX: 0.18, halfZ: 0.65 },
+      { x: -4.25, z: 5.65, halfX: 0.18, halfZ: 0.6 },
+      { x: 4.2, z: -5.7, halfX: 0.18, halfZ: 0.72 },
+      { x: 4.2, z: -1.4, halfX: 0.18, halfZ: 0.7 },
+      { x: 5.65, z: -5.75, halfX: 1.5, halfZ: 0.18 },
+      { x: 7.1, z: -3.55, halfX: 0.18, halfZ: 2.2 },
       { x: -1.05, z: 1.45, halfX: 1.7, halfZ: 0.62 },
       { x: 0.5, z: 0.15, halfX: 1.15, halfZ: 0.67 },
       { x: 2.65, z: -2.5, halfX: 1.35, halfZ: 0.55 },
@@ -540,8 +588,8 @@
 
     const playerRadius = 0.2;
     function canMoveTo(x, z) {
-      if (x < -5.85 || x > 5.85 || z < -4.78 || z > 9.5) return false;
-      if (z > 4.64 && z < 5.41 && Math.abs(x) > 0.82) return false;
+      if (x < -7.05 || x > 7.05 || z < -6.05 || z > 9.5) return false;
+      if (z > 5.95 && z < 6.55 && Math.abs(x) > 1.0) return false;
       return !obstacles.some((obstacle) =>
         Math.abs(x - obstacle.x) < obstacle.halfX + playerRadius &&
         Math.abs(z - obstacle.z) < obstacle.halfZ + playerRadius
