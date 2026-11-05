@@ -186,7 +186,7 @@
 
     const house = new THREE.Group();
     scene.add(house);
-    house.scale.set(10, 1, 10);
+    house.scale.set(2.5, 1, 2.5);
 
     // Solid walls enclose the room; the front doorway and roof slats keep it explorable.
     box(house, 8.2, 0.24, 6.7, materials.floor, 0, 0, 0);
@@ -371,7 +371,7 @@
 
     // A stepping-stone path leads up to the open front of the house.
     const landscape = new THREE.Group();
-    landscape.scale.set(10, 1, 10);
+    landscape.scale.set(2.5, 1, 2.5);
     scene.add(landscape);
     for (let i = 0; i < 6; i++) {
       const stone = box(landscape, 1.65, 0.12, 0.72, materials.path, 0, -0.035, 4.1 + i * 0.95, false);
