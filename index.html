@@ -1,47 +1,339 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Modern Cube House</title>
   <style>
-    body { margin: 0; background: #111; color: white; font-family: sans-serif; overflow: hidden; }
-    #info { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: #fff;
+      background: #dce7e8;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    canvas { display: block; }
+    #info {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      padding: 18px 20px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-left: 4px solid #e8a761;
+      border-radius: 12px;
+      background: rgba(25, 36, 39, .82);
+      box-shadow: 0 12px 35px rgba(18, 30, 34, .18);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+    h1 { margin: 0 0 5px; font-size: 18px; letter-spacing: .02em; }
+    #info p { margin: 0; color: #c3d0ce; font-size: 13px; }
+    #hint {
+      position: absolute;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 16px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      color: #eef4f1;
+      background: rgba(25, 36, 39, .78);
+      font-size: 12px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    #reset {
+      position: absolute;
+      top: 26px;
+      right: 26px;
+      padding: 10px 15px;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 9px;
+      color: white;
+      background: rgba(25, 36, 39, .78);
+      font: inherit;
+      cursor: pointer;
+    }
+    #reset:hover { background: #263b3d; }
+    @media (max-width: 600px) {
+      #info { top: 14px; left: 14px; padding: 13px 15px; }
+      #reset { top: 14px; right: 14px; }
+      #hint { bottom: 14px; font-size: 11px; }
+    }
   </style>
 </head>
 <body>
   <div id="info">
-    <h2 style="margin:0;color:#f59e0b;">Modern Cube House</h2>
-    <p style="margin:5px 0 0 0;color:#aaa;">Interactive 3D Prototype</p>
+    <h1>Modern Cube House</h1>
+    <p>A little home, inside and out</p>
   </div>
+  <button id="reset" type="button">Reset view</button>
+  <div id="hint">Drag to look around &nbsp;·&nbsp; Scroll to zoom</div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    scene.background = new THREE.Color(0xc9dcdf);
+    scene.fog = new THREE.Fog(0xc9dcdf, 24, 55);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputEncoding = THREE.sRGBEncoding;
     document.body.appendChild(renderer.domElement);
 
-    // 墙体 (白色立方体)
-    const houseGeometry = new THREE.BoxGeometry(2, 2, 2);
-    const houseMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
-    const house = new THREE.Mesh(houseGeometry, houseMaterial);
+    scene.add(new THREE.HemisphereLight(0xeaf5ff, 0x87927c, 1.7));
+    const sunlight = new THREE.DirectionalLight(0xffe2b8, 2.3);
+    sunlight.position.set(-8, 15, 10);
+    sunlight.castShadow = true;
+    sunlight.shadow.mapSize.set(2048, 2048);
+    sunlight.shadow.camera.left = -16;
+    sunlight.shadow.camera.right = 16;
+    sunlight.shadow.camera.top = 16;
+    sunlight.shadow.camera.bottom = -16;
+    scene.add(sunlight);
+
+    const mat = (color, roughness = 0.82) => new THREE.MeshStandardMaterial({ color, roughness });
+    const materials = {
+      grass: mat(0x899b74),
+      path: mat(0xc7b99f),
+      wall: mat(0xf0e9dc),
+      side: mat(0xd8d0c2),
+      wood: mat(0x9a6847),
+      darkWood: mat(0x493b32),
+      floor: mat(0xb78a63),
+      rug: mat(0x758c83),
+      sofa: mat(0xd49b70),
+      cushion: mat(0xf0d6b7),
+      fabric: mat(0xeee7d8),
+      metal: mat(0x354447, 0.38),
+      glass: new THREE.MeshStandardMaterial({ color: 0x9ccbd0, roughness: 0.25, metalness: 0.12 }),
+      leaf: mat(0x597457),
+      leafLight: mat(0x78966c),
+      flower: mat(0xe9a475)
+    };
+
+    function box(parent, width, height, depth, material, x, y, z, castShadow = true) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinder(parent, radiusTop, radiusBottom, height, material, x, y, z, segments = 16) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), materials.grass);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.13;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const house = new THREE.Group();
     scene.add(house);
 
-    // 屋顶 (红色金字塔/四棱锥)
-    const roofGeometry = new THREE.ConeGeometry(1.8, 1, 4);
-    const roofMaterial = new THREE.MeshBasicMaterial({ color: 0xff4444 });
-    const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-    roof.position.y = 1.5;
-    roof.rotation.y = Math.PI / 4;
-    scene.add(roof);
+    // The open front and right side make the furnished room easy to explore.
+    box(house, 8.2, 0.24, 6.7, materials.floor, 0, 0, 0);
+    box(house, 8.2, 4.7, 0.24, materials.wall, 0, 2.35, -3.35);
+    box(house, 0.24, 4.7, 6.7, materials.side, -4.1, 2.35, 0);
+    box(house, 8.7, 0.22, 0.32, materials.darkWood, 0, 4.83, -3.35);
+    box(house, 0.28, 0.22, 6.8, materials.darkWood, -4.1, 4.83, 0);
 
-    camera.position.z = 5;
-    camera.position.y = 1;
+    // Open pergola roof: shade without hiding the room from above.
+    for (let z = -2.7; z <= 2.2; z += 1.15) {
+      box(house, 8.55, 0.14, 0.24, materials.wood, 0, 5.03, z);
+    }
+    box(house, 8.7, 0.18, 0.22, materials.darkWood, 0, 5.03, 2.8);
+
+    // Back-wall picture windows with slim timber frames and crossbars.
+    [-2.35, 1.75].forEach((x) => {
+      box(house, 1.55, 1.45, 0.035, materials.glass, x, 3.05, -3.205, false);
+      [-0.81, 0.81].forEach((offset) => {
+        box(house, 0.07, 1.62, 0.09, materials.wood, x + offset, 3.05, -3.14);
+      });
+      [-0.77, 0.77].forEach((offset) => {
+        box(house, 1.68, 0.07, 0.09, materials.wood, x, 3.05 + offset, -3.14);
+      });
+      box(house, 0.055, 1.45, 0.08, materials.wood, x, 3.05, -3.11);
+      box(house, 1.55, 0.055, 0.08, materials.wood, x, 3.05, -3.11);
+      box(house, 1.8, 0.12, 0.28, materials.fabric, x, 2.19, -3.08);
+    });
+
+    // Living area: a soft rug, sofa, cushions, coffee table, and a leafy plant.
+    box(house, 4.6, 0.045, 3.1, materials.rug, -0.1, 0.145, 0.45, false);
+    box(house, 3.15, 0.72, 0.95, materials.sofa, -1.05, 0.6, 1.45);
+    box(house, 3.15, 0.95, 0.3, materials.sofa, -1.05, 1.12, 1.82);
+    [-2.3, 0.2].forEach((x) => box(house, 0.3, 0.68, 0.95, materials.sofa, x, 0.66, 1.45));
+    [-1.85, -0.8].forEach((x) => {
+      const pillow = box(house, 0.72, 0.22, 0.6, materials.cushion, x, 1.14, 1.32);
+      pillow.rotation.x = -0.16;
+    });
+
+    box(house, 2.05, 0.18, 1.08, materials.wood, 0.5, 0.62, 0.15);
+    [0.5, 1.95].forEach((x) => {
+      [-0.2, 0.5].forEach((z) => cylinder(house, 0.045, 0.045, 0.55, materials.darkWood, x, 0.34, z));
+    });
+    box(house, 1.55, 0.12, 0.12, materials.fabric, 0.5, 0.78, 0.15);
+
+    // A compact kitchen along the back wall.
+    box(house, 2.5, 0.86, 0.78, materials.fabric, 2.65, 0.58, -2.5);
+    box(house, 2.62, 0.12, 0.9, materials.wood, 2.65, 1.06, -2.5);
+    box(house, 2.5, 1.12, 0.16, materials.side, 2.65, 1.65, -3.02);
+    box(house, 2.62, 0.12, 0.21, materials.wood, 2.65, 2.28, -2.96);
+    [1.9, 2.65, 3.4].forEach((x) => box(house, 0.025, 0.65, 0.02, materials.wood, x, 0.58, -2.09));
+    box(house, 0.72, 0.035, 0.48, materials.metal, 2.65, 1.13, -2.52);
+    cylinder(house, 0.035, 0.035, 0.32, materials.metal, 2.65, 1.28, -2.52);
+    box(house, 0.32, 0.07, 0.32, materials.metal, 3.35, 1.17, -2.5);
+    for (let shelf = 0; shelf < 2; shelf++) {
+      box(house, 1.15, 0.08, 0.3, materials.wood, 0.85, 1.7 + shelf * 0.65, -3.02);
+      [0, 1, 2].forEach((book) => {
+        box(house, 0.14, 0.34 + (book % 2) * 0.08, 0.2,
+          [materials.sofa, materials.leaf, materials.flower][(book + shelf) % 3],
+          0.42 + book * 0.19, 1.9 + shelf * 0.65, -2.98);
+      });
+    }
+
+    // Dining nook beside the kitchen.
+    cylinder(house, 0.63, 0.63, 0.12, materials.wood, 2.05, 1.04, -0.75, 32);
+    cylinder(house, 0.09, 0.14, 0.88, materials.darkWood, 2.05, 0.58, -0.75);
+    [[1.05, -0.75], [2.95, -0.75]].forEach(([x, z]) => {
+      box(house, 0.54, 0.12, 0.55, materials.sofa, x, 0.55, z);
+      box(house, 0.54, 0.58, 0.12, materials.sofa, x, 0.85, z - 0.22);
+      [x - 0.18, x + 0.18].forEach((legX) => {
+        cylinder(house, 0.025, 0.025, 0.48, materials.darkWood, legX, 0.29, z);
+      });
+    });
+
+    // A tall floor lamp and a small potted plant add a lived-in touch.
+    cylinder(house, 0.19, 0.23, 0.08, materials.darkWood, -3.25, 0.2, 0.35);
+    cylinder(house, 0.025, 0.025, 2.25, materials.metal, -3.25, 1.34, 0.35);
+    cylinder(house, 0.3, 0.42, 0.58, materials.fabric, -3.25, 2.65, 0.35, 24);
+    cylinder(house, 0.22, 0.28, 0.48, materials.wood, 3.45, 0.42, 1.7);
+    [-0.18, 0, 0.18].forEach((offset, index) => {
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.27, 16, 12), index % 2 ? materials.leaf : materials.leafLight);
+      leaf.position.set(3.45 + offset, 0.98 + (index === 1 ? 0.2 : 0), 1.7);
+      leaf.scale.set(0.7, 1.4, 0.7);
+      leaf.castShadow = true;
+      house.add(leaf);
+    });
+
+    // A stepping-stone path leads up to the open front of the house.
+    for (let i = 0; i < 6; i++) {
+      const stone = box(scene, 1.65, 0.12, 0.72, materials.path, 0, -0.035, 4.1 + i * 0.95, false);
+      stone.rotation.y = (i % 2 ? -1 : 1) * 0.035;
+    }
+    box(scene, 10.5, 0.16, 0.16, materials.wood, 0, 0.08, 7.8);
+    box(scene, 10.5, 0.16, 0.16, materials.wood, 0, 0.08, -6.4);
+    box(scene, 0.16, 0.16, 14.2, materials.wood, -5.2, 0.08, 0.7);
+    box(scene, 0.16, 0.16, 14.2, materials.wood, 5.2, 0.08, 0.7);
+
+    function addTree(x, z, scale) {
+      const tree = new THREE.Group();
+      tree.position.set(x, 0, z);
+      tree.scale.setScalar(scale);
+      scene.add(tree);
+      cylinder(tree, 0.16, 0.23, 1.7, materials.wood, 0, 0.8, 0);
+      [[0, 2.0, 0, 0.82], [-0.45, 2.5, 0.1, 0.62], [0.4, 2.65, -0.05, 0.68]].forEach(([tx, ty, tz, size], index) => {
+        const crown = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(size, 1),
+          index % 2 ? materials.leaf : materials.leafLight
+        );
+        crown.position.set(tx, ty, tz);
+        crown.castShadow = true;
+        tree.add(crown);
+      });
+    }
+    addTree(-7, 1, 1.3);
+    addTree(7, -3, 1.5);
+    addTree(-7, -5, 0.95);
+
+    function addBush(x, z, scale) {
+      const bush = new THREE.Group();
+      bush.position.set(x, 0, z);
+      scene.add(bush);
+      [-0.35, 0, 0.35].forEach((offset, index) => {
+        const shrub = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(0.48 * scale, 1),
+          index % 2 ? materials.leafLight : materials.leaf
+        );
+        shrub.position.set(offset * scale, 0.36 * scale, 0);
+        shrub.castShadow = true;
+        bush.add(shrub);
+      });
+    }
+    addBush(-5.3, 3.0, 0.9);
+    addBush(5.5, 4.5, 1.05);
+    addBush(5.3, -5.0, 0.8);
+
+    const target = new THREE.Vector3(0, 2.05, 0);
+    const initial = { theta: Math.PI / 4, phi: 1.04, radius: 21 };
+    let theta = initial.theta;
+    let phi = initial.phi;
+    let radius = initial.radius;
+    let dragging = false;
+    let previousPointer = { x: 0, y: 0 };
+
+    function updateCamera() {
+      camera.position.set(
+        target.x + radius * Math.sin(phi) * Math.sin(theta),
+        target.y + radius * Math.cos(phi),
+        target.z + radius * Math.sin(phi) * Math.cos(theta)
+      );
+      camera.lookAt(target);
+    }
+    updateCamera();
+
+    renderer.domElement.addEventListener('pointerdown', (event) => {
+      dragging = true;
+      previousPointer = { x: event.clientX, y: event.clientY };
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+    renderer.domElement.addEventListener('pointermove', (event) => {
+      if (!dragging) return;
+      theta -= (event.clientX - previousPointer.x) * 0.006;
+      phi = THREE.MathUtils.clamp(phi + (event.clientY - previousPointer.y) * 0.006, 0.25, 1.48);
+      previousPointer = { x: event.clientX, y: event.clientY };
+      updateCamera();
+    });
+    renderer.domElement.addEventListener('pointerup', () => { dragging = false; });
+    renderer.domElement.addEventListener('pointercancel', () => { dragging = false; });
+    renderer.domElement.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      radius = THREE.MathUtils.clamp(radius + event.deltaY * 0.012, 10, 34);
+      updateCamera();
+    }, { passive: false });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      theta = initial.theta;
+      phi = initial.phi;
+      radius = initial.radius;
+      updateCamera();
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
 
     function animate() {
       requestAnimationFrame(animate);
-      house.rotation.y += 0.01;
-      roof.rotation.y += 0.01;
       renderer.render(scene, camera);
     }
     animate();
