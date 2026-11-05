@@ -117,7 +117,7 @@
 
     const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -130,11 +130,12 @@
     const sunlight = new THREE.DirectionalLight(0xffe2b8, 1.25);
     sunlight.position.set(-80, 150, 100);
     sunlight.castShadow = true;
-    sunlight.shadow.mapSize.set(1024, 1024);
-    sunlight.shadow.camera.left = -160;
-    sunlight.shadow.camera.right = 160;
-    sunlight.shadow.camera.top = 160;
-    sunlight.shadow.camera.bottom = -160;
+    sunlight.shadow.mapSize.set(512, 512);
+    sunlight.shadow.camera.left = -40;
+    sunlight.shadow.camera.right = 40;
+    sunlight.shadow.camera.top = 40;
+    sunlight.shadow.camera.bottom = -40;
+    sunlight.shadow.camera.updateProjectionMatrix();
     scene.add(sunlight);
 
     const mat = (color, roughness = 0.82) => new THREE.MeshStandardMaterial({ color, roughness });
@@ -482,15 +483,19 @@
       { x: 3.45, z: 1.32, halfX: 0.3, halfZ: 0.56 }
     ];
 
+    const cameraEye = new THREE.Vector3(0, 1.55, 0);
+    const cameraDirection = new THREE.Vector3();
     function updateCamera() {
-      const eye = character.localToWorld(new THREE.Vector3(0, 1.55, 0));
-      const direction = new THREE.Vector3(
-        -Math.sin(theta) * Math.cos(pitch),
-        Math.sin(pitch),
-        -Math.cos(theta) * Math.cos(pitch)
+      cameraEye.set(0, 1.55, 0);
+      character.localToWorld(cameraEye);
+      const horizontalLook = Math.cos(pitch);
+      camera.position.copy(cameraEye);
+      cameraDirection.set(
+        cameraEye.x - Math.sin(theta) * horizontalLook,
+        cameraEye.y + Math.sin(pitch),
+        cameraEye.z - Math.cos(theta) * horizontalLook
       );
-      camera.position.copy(eye);
-      camera.lookAt(eye.add(direction));
+      camera.lookAt(cameraDirection);
     }
     updateCamera();
 
@@ -616,7 +621,7 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
     });
 
     function animate() {
