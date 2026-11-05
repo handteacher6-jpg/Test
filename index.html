@@ -187,23 +187,25 @@
 
     const house = new THREE.Group();
     scene.add(house);
-    house.scale.setScalar(1);
+    const houseShell = new THREE.Group();
+    houseShell.scale.set(1.5, 1, 1.5);
+    scene.add(houseShell);
 
     // Solid walls enclose the room; the front doorway and roof slats keep it explorable.
-    box(house, 8.2, 0.24, 6.7, materials.floor, 0, 0, 0);
+    box(houseShell, 8.2, 0.24, 6.7, materials.floor, 0, 0, 0);
     [-3.6125, -0.3, 3.3125].forEach((x, index) => {
       const widths = [0.975, 2.55, 1.575];
-      box(house, widths[index], 4.7, 0.24, materials.wall, x, 2.35, -3.35);
+      box(houseShell, widths[index], 4.7, 0.24, materials.wall, x, 2.35, -3.35);
     });
-    [-2.425, 2.425].forEach((x) => box(house, 3.35, 4.7, 0.24, materials.wall, x, 2.35, 3.35));
-    box(house, 0.24, 4.7, 6.7, materials.side, -4.1, 2.35, 0);
-    box(house, 0.24, 4.7, 6.7, materials.side, 4.1, 2.35, 0);
-    box(house, 1.5, 0.8, 0.24, materials.wall, 0, 4.3, 3.35);
-    [-0.75, 0.75].forEach((x) => box(house, 0.14, 3.78, 0.3, materials.wood, x, 2.01, 3.35));
-    box(house, 1.64, 0.14, 0.3, materials.wood, 0, 3.83, 3.35);
-    box(house, 8.7, 0.22, 0.32, materials.darkWood, 0, 4.83, -3.35);
-    box(house, 0.28, 0.22, 6.8, materials.darkWood, -4.1, 4.83, 0);
-    box(house, 0.28, 0.22, 6.8, materials.darkWood, 4.1, 4.83, 0);
+    [-2.425, 2.425].forEach((x) => box(houseShell, 3.35, 4.7, 0.24, materials.wall, x, 2.35, 3.35));
+    box(houseShell, 0.24, 4.7, 6.7, materials.side, -4.1, 2.35, 0);
+    box(houseShell, 0.24, 4.7, 6.7, materials.side, 4.1, 2.35, 0);
+    box(houseShell, 1.5, 0.8, 0.24, materials.wall, 0, 4.3, 3.35);
+    [-0.75, 0.75].forEach((x) => box(houseShell, 0.14, 3.78, 0.3, materials.wood, x, 2.01, 3.35));
+    box(houseShell, 1.64, 0.14, 0.3, materials.wood, 0, 3.83, 3.35);
+    box(houseShell, 8.7, 0.22, 0.32, materials.darkWood, 0, 4.83, -3.35);
+    box(houseShell, 0.28, 0.22, 6.8, materials.darkWood, -4.1, 4.83, 0);
+    box(houseShell, 0.28, 0.22, 6.8, materials.darkWood, 4.1, 4.83, 0);
 
     // Bedroom partition with an open doorway.
     box(house, 0.14, 3.2, 2.05, materials.wall, -1.35, 1.6, -2.125);
@@ -261,24 +263,24 @@
 
     // Open pergola roof shades the interior while leaving it visible from above.
     for (let z = -2.7; z <= 2.2; z += 1.15) {
-      box(house, 8.55, 0.14, 0.24, materials.wood, 0, 5.03, z);
+      box(houseShell, 8.55, 0.14, 0.24, materials.wood, 0, 5.03, z);
     }
-    box(house, 8.7, 0.18, 0.22, materials.darkWood, 0, 5.03, 2.8);
+    box(houseShell, 8.7, 0.18, 0.22, materials.darkWood, 0, 5.03, 2.8);
 
     // Picture windows with slim timber frames and crossbars.
     [-2.35, 1.75].forEach((x) => {
-      box(house, 1.55, 2.325, 0.24, materials.wall, x, 1.1625, -3.35);
-      box(house, 1.55, 0.925, 0.24, materials.wall, x, 4.2375, -3.35);
-      box(house, 1.55, 1.45, 0.035, materials.glass, x, 3.05, -3.35, false);
+      box(houseShell, 1.55, 2.325, 0.24, materials.wall, x, 1.1625, -3.35);
+      box(houseShell, 1.55, 0.925, 0.24, materials.wall, x, 4.2375, -3.35);
+      box(houseShell, 1.55, 1.45, 0.035, materials.glass, x, 3.05, -3.35, false);
       [-0.81, 0.81].forEach((offset) => {
-        box(house, 0.07, 1.62, 0.09, materials.wood, x + offset, 3.05, -3.14);
+        box(houseShell, 0.07, 1.62, 0.09, materials.wood, x + offset, 3.05, -3.14);
       });
       [-0.77, 0.77].forEach((offset) => {
-        box(house, 1.68, 0.07, 0.09, materials.wood, x, 3.05 + offset, -3.14);
+        box(houseShell, 1.68, 0.07, 0.09, materials.wood, x, 3.05 + offset, -3.14);
       });
-      box(house, 0.055, 1.45, 0.08, materials.wood, x, 3.05, -3.11);
-      box(house, 1.55, 0.055, 0.08, materials.wood, x, 3.05, -3.11);
-      box(house, 1.8, 0.12, 0.28, materials.fabric, x, 2.19, -3.08);
+      box(houseShell, 0.055, 1.45, 0.08, materials.wood, x, 3.05, -3.11);
+      box(houseShell, 1.55, 0.055, 0.08, materials.wood, x, 3.05, -3.11);
+      box(houseShell, 1.8, 0.12, 0.28, materials.fabric, x, 2.19, -3.08);
     });
 
     // Living area: a soft rug, sofa, cushions, coffee table, and a leafy plant.
@@ -514,8 +516,8 @@
 
     const playerRadius = 0.2;
     function canMoveTo(x, z) {
-      if (x < -3.78 || x > 3.78 || z < -3.03 || z > 8.5) return false;
-      if (z > 3.02 && z < 3.72 && Math.abs(x) > 0.48) return false;
+      if (x < -5.85 || x > 5.85 || z < -4.78 || z > 9.5) return false;
+      if (z > 4.64 && z < 5.41 && Math.abs(x) > 0.82) return false;
       return !obstacles.some((obstacle) =>
         Math.abs(x - obstacle.x) < obstacle.halfX + playerRadius &&
         Math.abs(z - obstacle.z) < obstacle.halfZ + playerRadius
