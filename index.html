@@ -186,10 +186,16 @@
     scene.add(ground);
 
     const house = new THREE.Group();
+    house.scale.set(1.72, 1.72, 1.72);
     scene.add(house);
+
     const houseShell = new THREE.Group();
-    houseShell.scale.set(1.5, 0.6, 1.5);
+    houseShell.scale.set(1.8, 1.2, 1.8);
     scene.add(houseShell);
+
+    const extraRoom = new THREE.Group();
+    extraRoom.position.set(5.5, 0, -3.75);
+    house.add(extraRoom);
 
     // Solid walls enclose the room; the front doorway and roof slats keep it explorable.
     box(houseShell, 8.2, 0.24, 6.7, materials.floor, 0, 0, 0);
@@ -298,6 +304,24 @@
       [-0.2, 0.5].forEach((z) => cylinder(house, 0.045, 0.045, 0.55, materials.darkWood, x, 0.395, z));
     });
     box(house, 1.55, 0.12, 0.12, materials.fabric, 0.5, 0.78, 0.15);
+
+    // Extra family room / office to the side so the whole property feels larger and more complete.
+    box(extraRoom, 2.5, 0.045, 2.3, materials.rug, 0, 0.12, 0, false);
+    box(extraRoom, 1.4, 0.8, 0.7, materials.wood, -0.8, 0.48, 0.35);
+    box(extraRoom, 1.2, 0.6, 0.7, materials.fabric, 0.85, 0.46, -0.5);
+    box(extraRoom, 0.65, 0.14, 0.65, materials.wood, 0.85, 0.8, -0.5);
+    box(extraRoom, 0.55, 1.1, 0.48, materials.side, -1.15, 0.7, -0.7);
+    box(extraRoom, 0.8, 0.12, 0.8, materials.darkWood, -1.15, 1.3, -0.7);
+    cylinder(extraRoom, 0.18, 0.18, 0.6, materials.metal, 1.25, 0.38, 0.8);
+    const extraLamp = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 10), materials.metal);
+    extraLamp.position.set(1.25, 0.8, 0.8);
+    extraLamp.castShadow = true;
+    extraRoom.add(extraLamp);
+    const extraPlant = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5, 1), materials.leafLight);
+    extraPlant.position.set(1.45, 0.65, -1.1);
+    extraPlant.scale.set(1.1, 1.6, 1.1);
+    extraPlant.castShadow = true;
+    extraRoom.add(extraPlant);
 
     // A compact kitchen along the back wall.
     box(house, 2.5, 0.86, 0.78, materials.fabric, 2.65, 0.58, -2.5);
