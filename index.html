@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Modern Cube House</title>
+  <title>Modern Mega House</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -56,28 +56,66 @@
       cursor: pointer;
     }
     #reset:hover { background: #263b3d; }
+    #joystick {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      width: 124px;
+      height: 124px;
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 50%;
+      background: rgba(25, 36, 39, .48);
+      box-shadow: inset 0 0 24px rgba(255,255,255,.08);
+      touch-action: none;
+      user-select: none;
+    }
+    #joystick::before, #joystick::after {
+      position: absolute;
+      content: "";
+      background: rgba(255,255,255,.16);
+      pointer-events: none;
+    }
+    #joystick::before { top: 50%; left: 15%; width: 70%; height: 1px; }
+    #joystick::after { top: 15%; left: 50%; width: 1px; height: 70%; }
+    #joystick-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 48px;
+      height: 48px;
+      border: 2px solid rgba(255,255,255,.7);
+      border-radius: 50%;
+      background: rgba(232,167,97,.85);
+      box-shadow: 0 4px 14px rgba(0,0,0,.28);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
     @media (max-width: 600px) {
       #info { top: 14px; left: 14px; padding: 13px 15px; }
       #reset { top: 14px; right: 14px; }
-      #hint { bottom: 14px; font-size: 11px; }
+      #hint { bottom: 14px; left: auto; right: 14px; transform: none; font-size: 11px; white-space: normal; text-align: right; }
+      #joystick { bottom: 22px; left: 18px; width: 112px; height: 112px; }
     }
   </style>
 </head>
 <body>
   <div id="info">
-    <h1>Modern Cube House</h1>
-    <p>A little home, inside and out</p>
+    <h1>Modern Mega House</h1>
+    <p>Ten times bigger · Explore in first person</p>
   </div>
   <button id="reset" type="button">Reset view</button>
-  <div id="hint">WASD / arrow keys: move &nbsp;·&nbsp; Drag: look around &nbsp;·&nbsp; Scroll: zoom</div>
+  <div id="hint">WASD / arrows or joystick: move &nbsp;·&nbsp; Drag: look around</div>
+  <div id="joystick" role="application" aria-label="Movement joystick">
+    <div id="joystick-knob"></div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xaab8b8);
-    scene.fog = new THREE.Fog(0xaab8b8, 30, 65);
+    scene.fog = new THREE.Fog(0xaab8b8, 300, 650);
 
-    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -90,13 +128,13 @@
 
     scene.add(new THREE.HemisphereLight(0xeaf5ff, 0x73705d, 0.85));
     const sunlight = new THREE.DirectionalLight(0xffe2b8, 1.25);
-    sunlight.position.set(-8, 15, 10);
+    sunlight.position.set(-80, 150, 100);
     sunlight.castShadow = true;
     sunlight.shadow.mapSize.set(2048, 2048);
-    sunlight.shadow.camera.left = -16;
-    sunlight.shadow.camera.right = 16;
-    sunlight.shadow.camera.top = 16;
-    sunlight.shadow.camera.bottom = -16;
+    sunlight.shadow.camera.left = -160;
+    sunlight.shadow.camera.right = 160;
+    sunlight.shadow.camera.top = 160;
+    sunlight.shadow.camera.bottom = -160;
     scene.add(sunlight);
 
     const mat = (color, roughness = 0.82) => new THREE.MeshStandardMaterial({ color, roughness });
@@ -140,7 +178,7 @@
       return mesh;
     }
 
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), materials.grass);
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), materials.grass);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.13;
     ground.receiveShadow = true;
@@ -148,6 +186,7 @@
 
     const house = new THREE.Group();
     scene.add(house);
+    house.scale.set(10, 1, 10);
 
     // Solid walls enclose the room; the front doorway and roof slats keep it explorable.
     box(house, 8.2, 0.24, 6.7, materials.floor, 0, 0, 0);
@@ -162,6 +201,26 @@
     box(house, 8.7, 0.22, 0.32, materials.darkWood, 0, 4.83, -3.35);
     box(house, 0.28, 0.22, 6.8, materials.darkWood, -4.1, 4.83, 0);
     box(house, 0.28, 0.22, 6.8, materials.darkWood, 4.1, 4.83, 0);
+
+    // Warm pendants and framed art add more character to the enlarged interior.
+    const pendant = mat(0xffdf9e, 0.4);
+    [-2.4, 0, 2.4].forEach((x) => {
+      cylinder(house, 0.04, 0.04, 1.1, materials.metal, x, 4.35, 0.2);
+      const shade = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.35, 20, 1, true), materials.darkWood);
+      shade.position.set(x, 3.78, 0.2);
+      shade.rotation.x = Math.PI;
+      house.add(shade);
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 8), pendant);
+      bulb.position.set(x, 3.67, 0.2);
+      house.add(bulb);
+    });
+    box(house, 0.12, 1.4, 1.8, materials.darkWood, 3.94, 3.1, 0.25);
+    box(house, 0.05, 1.12, 1.52, materials.flower, 3.84, 3.1, 0.25, false);
+    box(house, 0.16, 0.1, 2, materials.wood, 3.86, 2.35, 0.25);
+    [-0.45, 0, 0.45].forEach((z, index) => {
+      box(house, 0.38, 0.52, 0.34, [materials.leaf, materials.sofa, materials.cushion][index],
+        3.76, 1.98, z + 0.25);
+    });
 
     // Open pergola roof shades the interior while leaving it visible from above.
     for (let z = -2.7; z <= 2.2; z += 1.15) {
@@ -245,6 +304,7 @@
 
     // A small character can walk through the front doorway and around the furniture.
     const character = new THREE.Group();
+    character.scale.set(0.1, 1, 0.1);
     character.position.set(0, 0.12, 4.35);
     house.add(character);
     const skin = mat(0xb97854);
@@ -275,20 +335,23 @@
     box(rightLeg, 0.2, 0.1, 0.32, characterDark, 0, -0.46, -0.035);
 
     // A stepping-stone path leads up to the open front of the house.
+    const landscape = new THREE.Group();
+    landscape.scale.set(10, 1, 10);
+    scene.add(landscape);
     for (let i = 0; i < 6; i++) {
-      const stone = box(scene, 1.65, 0.12, 0.72, materials.path, 0, -0.035, 4.1 + i * 0.95, false);
+      const stone = box(landscape, 1.65, 0.12, 0.72, materials.path, 0, -0.035, 4.1 + i * 0.95, false);
       stone.rotation.y = (i % 2 ? -1 : 1) * 0.035;
     }
-    box(scene, 10.5, 0.16, 0.16, materials.wood, 0, 0.08, 7.8);
-    box(scene, 10.5, 0.16, 0.16, materials.wood, 0, 0.08, -6.4);
-    box(scene, 0.16, 0.16, 14.2, materials.wood, -5.2, 0.08, 0.7);
-    box(scene, 0.16, 0.16, 14.2, materials.wood, 5.2, 0.08, 0.7);
+    box(landscape, 10.5, 0.16, 0.16, materials.wood, 0, 0.08, 7.8);
+    box(landscape, 10.5, 0.16, 0.16, materials.wood, 0, 0.08, -6.4);
+    box(landscape, 0.16, 0.16, 14.2, materials.wood, -5.2, 0.08, 0.7);
+    box(landscape, 0.16, 0.16, 14.2, materials.wood, 5.2, 0.08, 0.7);
 
     function addTree(x, z, scale) {
       const tree = new THREE.Group();
       tree.position.set(x, 0, z);
       tree.scale.setScalar(scale);
-      scene.add(tree);
+      landscape.add(tree);
       cylinder(tree, 0.16, 0.23, 1.7, materials.wood, 0, 0.8, 0);
       [[0, 2.0, 0, 0.82], [-0.45, 2.5, 0.1, 0.62], [0.4, 2.65, -0.05, 0.68]].forEach(([tx, ty, tz, size], index) => {
         const crown = new THREE.Mesh(
@@ -303,11 +366,13 @@
     addTree(-7, 1, 1.3);
     addTree(7, -3, 1.5);
     addTree(-7, -5, 0.95);
+    addTree(7, 6, 1.1);
+    addTree(-8, -8, 1.25);
 
     function addBush(x, z, scale) {
       const bush = new THREE.Group();
       bush.position.set(x, 0, z);
-      scene.add(bush);
+      landscape.add(bush);
       [-0.35, 0, 0.35].forEach((offset, index) => {
         const shrub = new THREE.Mesh(
           new THREE.IcosahedronGeometry(0.48 * scale, 1),
@@ -321,22 +386,44 @@
     addBush(-5.3, 3.0, 0.9);
     addBush(5.5, 4.5, 1.05);
     addBush(5.3, -5.0, 0.8);
+    addBush(-5.6, -4.8, 1.1);
+    addBush(6.2, 1.2, 0.85);
 
-    const target = new THREE.Vector3(0, 2.05, 0);
+    // Low garden lamps and flower beds line the long approach to the entrance.
+    for (let z = 4.8; z <= 7.2; z += 1.2) {
+      [-1.4, 1.4].forEach((x) => {
+        cylinder(landscape, 0.045, 0.09, 1.05, materials.metal, x, 0.53, z);
+        const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), pendant);
+        lantern.position.set(x, 1.12, z);
+        landscape.add(lantern);
+      });
+    }
+    [-1, 1].forEach((side) => {
+      for (let flower = 0; flower < 9; flower++) {
+        const blossom = new THREE.Mesh(
+          new THREE.SphereGeometry(0.16, 10, 8),
+          flower % 2 ? materials.flower : materials.cushion
+        );
+        blossom.position.set(side * (4.4 + (flower % 3) * 0.28), 0.42, 4.3 + Math.floor(flower / 3) * 0.55);
+        blossom.castShadow = true;
+        landscape.add(blossom);
+        cylinder(landscape, 0.025, 0.025, 0.38, materials.leaf, blossom.position.x, 0.21, blossom.position.z, 8);
+      }
+    });
+
     const initial = {
       theta: 0.25,
-      phi: 1.04,
-      radius: 14.5,
+      pitch: 0,
       characterX: 0,
       characterZ: 4.35
     };
     let theta = initial.theta;
-    let phi = initial.phi;
-    let radius = initial.radius;
-    let exploring = false;
+    let pitch = initial.pitch;
     let dragging = false;
     let previousPointer = { x: 0, y: 0 };
-    const targetDestination = new THREE.Vector3();
+    let joystickPointer = null;
+    let joystickX = 0;
+    let joystickY = 0;
     const pressedKeys = new Set();
     const clock = new THREE.Clock();
     const obstacles = [
@@ -347,12 +434,14 @@
     ];
 
     function updateCamera() {
-      camera.position.set(
-        target.x + radius * Math.sin(phi) * Math.sin(theta),
-        target.y + radius * Math.cos(phi),
-        target.z + radius * Math.sin(phi) * Math.cos(theta)
+      const eye = character.localToWorld(new THREE.Vector3(0, 1.55, 0));
+      const direction = new THREE.Vector3(
+        -Math.sin(theta) * Math.cos(pitch),
+        Math.sin(pitch),
+        -Math.cos(theta) * Math.cos(pitch)
       );
-      camera.lookAt(target);
+      camera.position.copy(eye);
+      camera.lookAt(eye.add(direction));
     }
     updateCamera();
 
@@ -361,8 +450,6 @@
       if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
         event.preventDefault();
         pressedKeys.add(key);
-        exploring = true;
-        radius = Math.min(radius, 8.5);
       }
     });
     window.addEventListener('keyup', (event) => pressedKeys.delete(event.key.toLowerCase()));
@@ -379,9 +466,9 @@
 
     function moveCharacter(delta) {
       const forward = Number(pressedKeys.has('w') || pressedKeys.has('arrowup')) -
-        Number(pressedKeys.has('s') || pressedKeys.has('arrowdown'));
+        Number(pressedKeys.has('s') || pressedKeys.has('arrowdown')) - joystickY;
       const sideways = Number(pressedKeys.has('d') || pressedKeys.has('arrowright')) -
-        Number(pressedKeys.has('a') || pressedKeys.has('arrowleft'));
+        Number(pressedKeys.has('a') || pressedKeys.has('arrowleft')) + joystickX;
       const length = Math.hypot(forward, sideways);
       if (!length) {
         leftLeg.rotation.x = THREE.MathUtils.damp(leftLeg.rotation.x, 0, 12, delta);
@@ -418,26 +505,61 @@
     renderer.domElement.addEventListener('pointermove', (event) => {
       if (!dragging) return;
       theta -= (event.clientX - previousPointer.x) * 0.006;
-      phi = THREE.MathUtils.clamp(phi + (event.clientY - previousPointer.y) * 0.006, 0.25, 1.48);
+      pitch = THREE.MathUtils.clamp(pitch - (event.clientY - previousPointer.y) * 0.006, -0.65, 0.65);
       previousPointer = { x: event.clientX, y: event.clientY };
       updateCamera();
     });
     renderer.domElement.addEventListener('pointerup', () => { dragging = false; });
     renderer.domElement.addEventListener('pointercancel', () => { dragging = false; });
-    renderer.domElement.addEventListener('wheel', (event) => {
+
+    const joystick = document.getElementById('joystick');
+    const joystickKnob = document.getElementById('joystick-knob');
+    function updateJoystick(event) {
+      const rect = joystick.getBoundingClientRect();
+      const maxTravel = rect.width * 0.32;
+      const dx = event.clientX - (rect.left + rect.width / 2);
+      const dy = event.clientY - (rect.top + rect.height / 2);
+      const distance = Math.min(Math.hypot(dx, dy), maxTravel);
+      const angle = Math.atan2(dy, dx);
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+      joystickX = x / maxTravel;
+      joystickY = y / maxTravel;
+      joystickKnob.style.left = `calc(50% + ${x}px)`;
+      joystickKnob.style.top = `calc(50% + ${y}px)`;
+    }
+    joystick.addEventListener('pointerdown', (event) => {
       event.preventDefault();
-      radius = THREE.MathUtils.clamp(radius + event.deltaY * 0.012, 5, 28);
-      updateCamera();
-    }, { passive: false });
+      joystickPointer = event.pointerId;
+      joystick.setPointerCapture(event.pointerId);
+      updateJoystick(event);
+    });
+    joystick.addEventListener('pointermove', (event) => {
+      if (event.pointerId === joystickPointer) updateJoystick(event);
+    });
+    function releaseJoystick(event) {
+      if (event.pointerId !== joystickPointer) return;
+      joystickPointer = null;
+      joystickX = 0;
+      joystickY = 0;
+      joystickKnob.style.left = '50%';
+      joystickKnob.style.top = '50%';
+    }
+    joystick.addEventListener('pointerup', releaseJoystick);
+    joystick.addEventListener('pointercancel', releaseJoystick);
 
     document.getElementById('reset').addEventListener('click', () => {
       theta = initial.theta;
-      phi = initial.phi;
-      radius = initial.radius;
+      pitch = initial.pitch;
       character.position.set(initial.characterX, 0.12, initial.characterZ);
       character.rotation.y = 0;
-      exploring = false;
       pressedKeys.clear();
+      if (joystickPointer !== null) joystick.releasePointerCapture(joystickPointer);
+      joystickPointer = null;
+      joystickX = 0;
+      joystickY = 0;
+      joystickKnob.style.left = '50%';
+      joystickKnob.style.top = '50%';
       updateCamera();
     });
 
@@ -452,12 +574,6 @@
       requestAnimationFrame(animate);
       const delta = Math.min(clock.getDelta(), 0.05);
       moveCharacter(delta);
-      if (exploring) {
-        targetDestination.set(character.position.x, 1.35, character.position.z);
-      } else {
-        targetDestination.set(0, 2.05, 0);
-      }
-      target.lerp(targetDestination, 1 - Math.exp(-delta * 5));
       updateCamera();
       renderer.render(scene, camera);
     }
