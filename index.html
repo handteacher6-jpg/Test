@@ -55,7 +55,7 @@
     <script type="importmap">
         {
             "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build three.module.js",
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                 "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
             }
         }
@@ -91,3 +91,119 @@
         sunLight.shadow.camera.left = -10;
         sunLight.shadow.camera.right = 10;
         sunLight.shadow.camera.top = 10;
+        sunLight.shadow.camera.bottom = -10;
+        sunLight.shadow.camera.near = 0.1;
+        sunLight.shadow.camera.far = 50;
+        scene.add(sunLight);
+
+        // --- GROUND ---
+        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // --- HOUSE ---
+        // Main house body
+        const houseGroup = new THREE.Group();
+        scene.add(houseGroup);
+
+        // House base (larger rectangle)
+        const baseGeometry = new THREE.BoxGeometry(6, 2.5, 4);
+        const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); // Brown wood
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        base.position.y = 1.25;
+        base.castShadow = true;
+        base.receiveShadow = true;
+        houseGroup.add(base);
+
+        // House walls
+        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x87CEEB }); // Sky blue
+        
+        // Front wall
+        const frontWallGeometry = new THREE.BoxGeometry(6, 3, 0.5);
+        const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
+        frontWall.position.z = 2;
+        frontWall.castShadow = true;
+        houseGroup.add(frontWall);
+
+        // Back wall
+        const backWallGeometry = new THREE.BoxGeometry(6, 3, 0.5);
+        const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
+        backWall.position.z = -2;
+        backWall.castShadow = true;
+        houseGroup.add(backWall);
+
+        // Left wall
+        const leftWallGeometry = new THREE.BoxGeometry(0.5, 3, 4);
+        const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
+        leftWall.position.x = -3;
+        leftWall.castShadow = true;
+        houseGroup.add(leftWall);
+
+        // Right wall
+        const rightWallGeometry = new THREE.BoxGeometry(0.5, 3, 4);
+        const rightWall = new THREE.Mesh(rightWallGeometry, wallMaterial);
+        rightWall.position.x = 3;
+        rightWall.castShadow = true;
+        houseGroup.add(rightWall);
+
+        // House roof
+        const roofGeometry = new THREE.PentagonGeometry ? new THREE.PentagonGeometry(3.5, 1) : new THREE.BoxGeometry(7, 0.5, 5);
+        const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xFF6347 }); // Red
+        const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+        roof.position.y = 4;
+        roof.castShadow = true;
+        houseGroup.add(roof);
+
+        // Door
+        const doorGeometry = new THREE.BoxGeometry(1.5, 2, 0.1);
+        const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 }); // Dark brown
+        const door = new THREE.Mesh(doorGeometry, doorMaterial);
+        door.position.set(0, 1, 2.1);
+        door.castShadow = true;
+        houseGroup.add(door);
+
+        // Windows
+        const windowMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFF00 }); // Yellow
+        
+        // Front windows
+        const frontWindowGeometry = new THREE.BoxGeometry(1, 1, 0.1);
+        const frontWindow1 = new THREE.Mesh(frontWindowGeometry, windowMaterial);
+        frontWindow1.position.set(-1.5, 1.5, 2.1);
+        houseGroup.add(frontWindow1);
+        
+        const frontWindow2 = new THREE.Mesh(frontWindowGeometry, windowMaterial);
+        frontWindow2.position.set(1.5, 1.5, 2.1);
+        houseGroup.add(frontWindow2);
+
+        // --- ANIMATIONS ---
+        let time = 0;
+
+        // Rotate house slowly
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            time += 0.01;
+            
+            // Gentle rotation
+            houseGroup.rotation.y = time * 0.2;
+            houseGroup.rotation.x = Math.sin(time * 0.5) * 0.1;
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // --- RESIZE HANDLER ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>
